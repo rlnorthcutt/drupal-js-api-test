@@ -1,0 +1,4 @@
+name = API version 1
+core = 7.x
+package = API
+dependencies[] = js

@@ -1,0 +1,172 @@
+<?php
+
+/**
+ * Implements hook_js().
+ */
+function api_v1_js() {
+  return array(
+    // Example URL is js/api_v1/entity/node/1
+    'entity' => array(
+      'callback' => 'api_v1_entity_callback',
+      'access callback' => 'api_v1_entity_access',
+      'includes' => array('json-encode', 'entity', 'cache', 'path', 'common'),
+      'dependencies' => array('entity', 'field'),
+    ),
+    // Example URL is js/api_v1/ticket/4/total
+    'ticket' => array(
+      'callback' => 'api_v1_ticket_callback',
+      'access callback' => 'api_v1_entity_access',
+      'includes' => array('json-encode','cache', 'path', 'common'),
+      'dependencies' => array(),
+    ),
+    // Example URL is js/api_v1/user_autocomplete/string
+    'autocomplete' => array(
+      'callback' => 'api_v1_autocomplete',
+      'access callback' => 'api_v1_entity_access',
+      'includes' => array('path', 'user'),
+      'dependencies' => array('user'),
+    ),
+    // Example URL is js/api_v1/form/comment/1
+    'form' => array(
+      'callback' => 'api_v1_form',
+      'access callback' => 'api_v1_entity_access',
+      'includes' => array('path', 'form','menu', 'ajax', 'theme', 'entity', 'token'),
+      'dependencies' => array('comment', 'node', 'field', 'user'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function api_v1_menu() {
+  return array(
+    'api_v1/entity' => array(
+      'page callback' => 'api_v1_entity_callback',
+      'access callback' => 'api_v1_entity_access',
+    ),
+    'api_v1/ticket' => array(
+      'page callback' => 'api_v1_ticket_callback',
+      'access callback' => 'api_v1_entity_access',
+    ),
+    'api_v1/autocomplete' => array(
+      'page callback' => 'api_v1_autocomplete',
+      'access callback' => 'api_v1_entity_access',
+    ),
+    'api_v1/form' => array(
+      'page callback' => 'api_v1_form',
+      'access callback' => 'api_v1_entity_access',
+    ),
+  );
+}
+
+/**
+ * Callback to generate JSON entities
+ */
+function api_v1_entity_callback($type = 'node', $id = NULL, $args = NULL) {
+  switch ($_SERVER['REQUEST_METHOD']) {
+    case 'POST':
+      // Create entity from posted values
+      break;
+
+    case 'PUT':
+      // Update entity from posted values
+      break;
+
+    case 'DELETE':
+      // Delete entity
+      break;
+
+    default:
+      if (is_numeric($id)) {
+        $entity = entity_load_single($type, $id);
+        drupal_json_output($entity);
+      }
+      else {
+        // Look up a view/list of nodes
+        drupal_json_output('list of entities');
+      }
+  }
+  drupal_exit();
+}
+
+/**
+ * Callback to get/calculate a ticket's total time
+ */
+function api_v1_ticket_callback($nid = NULL, $op = 'total') {
+  $output = array('ticketId' => $nid, 'success' => TRUE);
+  if (is_numeric($nid)) {
+    switch ($op) {
+      case 'total':
+      default:
+        $total = db_query("
+          SELECT SUM(t.field_time_value)
+          FROM {comment} c, {field_data_field_time} t
+          WHERE c.nid = :nid
+          AND t.entity_type =  'comment'
+          AND t.entity_id = c.cid
+          ", array(':nid' => $nid))->fetchField();
+        $output['ticketTotal'] = ($total) ? $total : 0;
+        break;
+    }
+  }
+  drupal_json_output($output);
+  drupal_exit();
+}
+
+/**
+ * Menu callback; Retrieve a JSON object containing autocomplete suggestions for existing users.
+ *   identical to user_autocomplete() in user.pages.inc
+ */
+function api_v1_autocomplete($type = 'user', $string = '') {
+  switch($type) {
+    case 'user':
+      $matches = array();
+      if ($string) {
+        $result = db_select('users')->fields('users', array('name'))->condition('name', db_like($string) . '%', 'LIKE')->range(0, 10)->execute();
+        foreach ($result as $user) {
+          $matches[$user->name] = check_plain($user->name);
+        }
+      }
+      $matches['success'] = TRUE;
+      break;
+  }
+  drupal_json_output($matches);
+  drupal_exit();
+}
+
+/**
+ * Menu callback to direct form generation
+ */
+function api_v1_form($type = 'comment', $id = NULL) {
+  switch ($type) {
+    case 'comment':
+    default:
+      api_v1_comment($id);
+      break;
+  }
+}
+
+/**
+ * Generate a comment form for a node
+ */
+function api_v1_comment($nid = NULL) {
+  if (is_numeric($nid)) {
+    // Load all modules or drupal_render will fail on theme()
+    module_load_all();
+    $output = array('nodeId' => $nid, 'success' => TRUE);
+    $comment = new stdClass;
+    $comment->nid = $nid;
+    $form = drupal_get_form('comment_form', $comment);
+    $output['form'] = drupal_render($form);
+    drupal_json_output($output);
+    drupal_exit();
+  }
+}
+
+/**
+ * Access callback
+ */
+function api_v1_entity_access() {
+  return TRUE;
+}

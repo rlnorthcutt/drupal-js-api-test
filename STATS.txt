@@ -1,0 +1,87 @@
+***************************
+* API CALL TO LOAD ENTITY *
+***************************
+HOOK_MENU
+time curl http://dev1.dev/api_v1/entity/node/1
+- full   - 4.056s
+- cached - 0.073s
+
+ab -n100 -c1 http://dev1.dev/js/api_v1/entity/node/1
+Time taken for tests:   3.791 seconds
+Requests per second:    26.37 [#/sec] (mean)
+Time per request:       37.915 [ms] (mean)
+Transfer rate:          10.95 [Kbytes/sec] received
+
+HOOK_JS
+time curl http://dev1.dev/js/api_v1/entity/node/1
+- full   - 0.109s
+- cached - 0.037s
+
+ab -n100 -c1 http://dev1.dev/js/api_v1/entity/node/1
+Time taken for tests:   1.112 seconds
+Requests per second:    89.95 [#/sec] (mean)
+Time per request:       11.117 [ms] (mean)
+Transfer rate:          21.78 [Kbytes/sec] received
+
+***********************************************
+* API CALL TO CALCULATE TOTAL TIME ON TICKETS *
+***********************************************
+HOOK_MENU
+time curl http://dev1.dev/api_v1/ticket/3/total
+- full   - 2.394s
+- cached - 0.081s
+
+ab -n100 -c1 http://dev1.dev/api_v1/ticket/3/total
+Time taken for tests:   3.372 seconds
+Requests per second:    29.66 [#/sec] (mean)
+Time per request:       33.720 [ms] (mean)
+Transfer rate:          12.68 [Kbytes/sec] received
+
+HOOK_JS
+time curl http://dev1.dev/js/api_v1/ticket/3/total
+- full   - 0.115s
+- cached - 0.037s
+
+ab -n100 -c1 http://dev1.dev/js/api_v1/ticket/3/total
+Time taken for tests:   1.077 seconds
+Requests per second:    92.81 [#/sec] (mean)
+Time per request:       10.775 [ms] (mean)
+Transfer rate:          23.66 [Kbytes/sec] received
+
+*************************
+* Autocomplete for user *
+*************************
+SYSTEM
+http://dev1.dev/user/autocomplete/r
+
+HOOK_MENU
+time curl http://dev1.dev/api_v1/autocomplete/user/r
+- full   - 2.513s
+- cached - 0.096s
+
+ab -n100 -c1 http://dev1.dev/api_v1/autocomplete/user/r
+Time taken for tests:   6.798 seconds
+Requests per second:    12.06 [#/sec] (mean)
+Time per request:       82.902 [ms] (mean)
+Transfer rate:          5.12 [Kbytes/sec] received
+
+HOOK_JS
+time curl http://dev1.dev/js/api_v1/autocomplete/user/r
+- full   - 0.106s
+- cached - 0.039s
+
+ab -n100 -c1 http://dev1.dev/js/api_v1/autocomplete/user/r
+Time taken for tests:   1.217 seconds
+Requests per second:    82.19 [#/sec] (mean)
+Time per request:       12.167 [ms] (mean)
+Transfer rate:          20.71 [Kbytes/sec] received
+
+*************************
+* Generate comment form *
+*************************
+No real difference in these - probably due to the module_load_all() that makes theme() work.
+HOOK_MENU
+http://dev1.dev/api_v1/form/comment/3
+
+HOOK_JS
+http://dev1.dev/js/api_v1/form/comment/3
